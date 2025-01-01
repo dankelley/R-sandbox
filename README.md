@@ -2,4 +2,5 @@
 
 ## Contents
 
-* `filtering` directory holding tests of digital time-series filters.
+* `complex_demodulation`: a directory holding tests of complex demodulation.
+* `filtering`: a directory holding tests of digital time-series filters.
