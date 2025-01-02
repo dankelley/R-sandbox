@@ -2,7 +2,6 @@
 library(signal)
 
 W <- 0.1
-bf <- butter(n = 3, W = W, type = "low") # 5 Hz low-pass filter
 x <- rnorm(1e4)
 xf <- filtfilt(bf, x)
 par(mfcol = c(3, 2))
