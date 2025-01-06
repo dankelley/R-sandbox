@@ -1,0 +1,103 @@
+---
+title: How to aggregate ranking data
+date: "2025-01-06"
+author: Dan Kelley
+output: pdf_document
+---
+
+**Abstract.** A scheme is discussed for aggregating rankings made by committee
+members. In is preferable to a simpler scheme of averaging rankings across
+committee members, as is made clear in an example at the end. For more, see my
+video explaining the method, at
+[https://youtu.be/mOxEfYG6wRg](https://youtu.be/mOxEfYG6wRg).
+
+
+# Rank aggregation method
+
+Assume that there are $n$ files to be judged, and $m$ committee members.  If
+each committee member has developed a ranking for each file (with no ties), and
+if either there is an odd number of committee members or one member is assigned
+a sort of double vote, then it is possible to rank using a sorting method.
+
+Suppose there are just 2 candidates, named "A" and "B". Imagine a neutral
+person writing them down with an arbitrarily selected order, say A first (i.e.
+top-ranked) and B second. Now, imagine that each committee member is asked the
+question "should A and B be interchanged". With an odd number of committee
+members, or with an even number with a single person being assigned two votes,
+there is always a majority answer to this question -- that is, a democratic
+decision on the question of whether A and B ought to be reordered in the list.
+
+As framed, this decision can be made unequivocally for each possible pairing in
+a list of $n>2$ candidates, and that means that standard ordering procedures
+can be employed to arrive at a final ranking, *without* the need for discussion
+of the mechanics. (This frees up the committee for more important things, e.g.
+relying on each other to notice germane aspects of files that might have been
+missed.)
+
+The scheme requites $n-1$ passes through the list of files. Start with an
+arbitrary ordering of the files (alphabetical, perhaps). Then, consider the top
+two elements in the list, reordering them if that is the majority decision.
+After this decision, the weaker candidate is at position 2 in the list. Then
+consider it and the candidate below it, possibly reordering within this pair.
+Continue this until the bottom of the list is reached.  At this stage, the
+weakest candidate is at the bottom of the list, and that spot need not be
+considered further.
+
+Then perform a second pass, through all but the bottom element. After this, the
+bottom two on the list are in order.  This process is to be repeated for $n-1$
+passes. The procedure is boring to do in person, but of course it is very easy
+to do in computer code (see next section).
+
+# R-language code for this method
+
+In the following R code, `names` is a vector of applicant names, and `...` is a
+place-holder that indicates that `ranker` can accept an arbitrary number of
+rankings, one per committee member.  (This will become clear in the test case
+of the next section.)
+
+```{r}
+ranker <- function(names, ...) {
+    rankings <- data.frame(...)
+    m <- ncol(rankings)
+    v <- data.frame(names, rankings)
+    colnames(v) <- c("Name", paste("R", 1:m, sep = ""))
+    vorig <- v
+    m <- ncol(rankings)
+    criterion <- m / 2
+    nexch <- 0
+    n <- length(names)
+    for (era in seq(1, n - 1)) {
+        for (i in seq(1, n - 1)) {
+            w <- sapply(seq(2, m + 1), \(j) v[i, j] > v[i + 1, j]) |> sum()
+            if (w > criterion) {
+                tmp <- v[i, ]
+                v[i, ] <- v[i + 1, ]
+                v[i + 1, ] <- tmp
+                nexch <- nexch + 1
+            }
+        }
+    }
+    data.frame(vorig, Rank = as.vector(sapply(names, \(name) which(v[, 1] == name))))
+}
+```
+
+# Test case
+
+```{r}
+dataText <- "
+Name R1 R2 R3
+   A  3  2  4
+   B  5  4  5
+   C  1  3  1
+   D  4  1  3
+   E  2  5  2
+"
+d <- read.table(text = dataText, header = TRUE)
+R <- ranker(d$Name, d$R1, d$R2, d$R3)
+# Add a column for the average-across-ranks method (which is problematic)
+R$AvgR1R2R3 <- (R$R1 + R$R2 + R$R3) / 3
+R
+```
+
+Note that some `AvgR1R2R3` scores are equal, making it impossible to establish
+a ranking from them.
