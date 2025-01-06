@@ -6,47 +6,47 @@ output: pdf_document
 ---
 
 **Abstract.** A scheme is discussed for aggregating rankings made by committee
-members. In is preferable to a simpler scheme of averaging rankings across
-committee members, as is made clear in an example at the end. For more, see my
-video explaining the method, at
+members. It is argued (with an example) that this is preferable to a simpler
+scheme of averaging rankings across committee members. As an alternative to
+this memo, see a video explaining the method, at
 [https://youtu.be/mOxEfYG6wRg](https://youtu.be/mOxEfYG6wRg).
 
 
 # Rank aggregation method
 
-Assume that there are $n$ files to be judged, and $m$ committee members.  If
-each committee member has developed a ranking for each file (with no ties), and
-if either there is an odd number of committee members or one member is assigned
-a sort of double vote, then it is possible to rank using a sorting method.
+The method has two requirements.
 
-Suppose there are just 2 candidates, named "A" and "B". Imagine a neutral
-person writing them down with an arbitrarily selected order, say A first (i.e.
-top-ranked) and B second. Now, imagine that each committee member is asked the
-question "should A and B be interchanged". With an odd number of committee
-members, or with an even number with a single person being assigned two votes,
-there is always a majority answer to this question -- that is, a democratic
-decision on the question of whether A and B ought to be reordered in the list.
+1. Each committee member ranks each of the files, with no ties and no gaps.
+2. Either there is an odd number of committee members, or one of the members
+   has been assigned a "double voting" status.
 
-As framed, this decision can be made unequivocally for each possible pairing in
-a list of $n>2$ candidates, and that means that standard ordering procedures
-can be employed to arrive at a final ranking, *without* the need for discussion
-of the mechanics. (This frees up the committee for more important things, e.g.
-relying on each other to notice germane aspects of files that might have been
-missed.)
+Assuming these requirements are method, then there is a definitive answer to
+any proposed two-candidate ordering. And that means that a so-called
+bubble-sort algorithm can be applied to aggregate rankings.
 
-The scheme requites $n-1$ passes through the list of files. Start with an
-arbitrary ordering of the files (alphabetical, perhaps). Then, consider the top
-two elements in the list, reordering them if that is the majority decision.
-After this decision, the weaker candidate is at position 2 in the list. Then
-consider it and the candidate below it, possibly reordering within this pair.
-Continue this until the bottom of the list is reached.  At this stage, the
-weakest candidate is at the bottom of the list, and that spot need not be
-considered further.
+To begin with, suppose there are just 2 candidates, named "Smith" and "Jones".
+We start by writing down the names in any order. Using the alphabet, for
+example, we might write "Jones" at the top of the list and "Smith" below it.
+With this list, ask each committee member if they agree with the ranking. Given
+conditions 1 and 2, there is certainly a majority opinion. The core of the
+proposed aggregation method is to respect this opinion. After this is done,
+there is a definitive ranking of these two candidates.
 
-Then perform a second pass, through all but the bottom element. After this, the
-bottom two on the list are in order.  This process is to be repeated for $n-1$
-passes. The procedure is boring to do in person, but of course it is very easy
-to do in computer code (see next section).
+This can be applied to *any* pair of candidates, always with a clear answer to
+the question "should these be reordered". If we work down the list from the top, interchanging names as appropriate, we will end up with the weakest candidate at the bottom.
+
+This procedure is then applied a second time. Of course, the bottom element
+need not be considered. At the end of this pass, the bottom two on the list are
+in the democratically-decided order.
+
+It should be obvious that this procedure will eventually result in a
+rank-ordered list.  For $n$ students, $n-1$ passes are required. In total, the
+number of comparisons is proportional to $n^2$, which can of course get large
+for a large number of files, but the point is that this procedure is not to be
+carried out by actually querying the committee members, because they will have
+submitted rankings in numerical form.  A computer code can take care of the
+mechanics. Such a code is provided in the next section, with an example in the
+section following that.
 
 # R-language code for this method
 
@@ -83,6 +83,9 @@ ranker <- function(names, ...) {
 
 # Test case
 
+In a real-world application, the ranking data will be stored in a file, but for
+illustration, let's store some data in a string instead.
+
 ```{r}
 dataText <- "
 Name R1 R2 R3
@@ -92,12 +95,24 @@ Name R1 R2 R3
    D  4  1  3
    E  2  5  2
 "
+```
+Now we may read the data from that string.
+
+```{r}
 d <- read.table(text = dataText, header = TRUE)
+```
+
+Note that we have 3 committee members, producing these rankings called `R1`,
+`R2` and `R3` respectively.  To do the rank aggregation, we simply call the
+above-defined function. For comparison, we also add an average-across-rankings
+column.
+
+
+```{r}
 R <- ranker(d$Name, d$R1, d$R2, d$R3)
-# Add a column for the average-across-ranks method (which is problematic)
 R$AvgR1R2R3 <- (R$R1 + R$R2 + R$R3) / 3
 R
 ```
 
-Note that some `AvgR1R2R3` scores are equal, making it impossible to establish
-a ranking from them.
+Notice that the average-across-rankings value has ties, so that value cannot be used
+for ranking, without further work (and committee discussion).
