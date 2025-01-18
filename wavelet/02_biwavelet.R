@@ -44,7 +44,7 @@ mtext("Simulated signal (red is signal envelop, max 0.05)", line = 0.2)
 # UR panel: plot from biwavelet package
 alpha.coi <- 0.9 # FIXME: what is this?
 plot(U,
-    xlab = "Time [s]", ylab = "Period [hour]",
+    xlab = "Time [s]", ylab = "Period [s]",
     lwd.sig = 1, alpha.coi = alpha.coi
 )
 abline(h = log2(period), lty = 2) # test: does line go in middle of peak?
