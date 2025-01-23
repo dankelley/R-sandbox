@@ -2,7 +2,7 @@ library(oce)
 showComplexParts <- FALSE
 alpha <- 0.25 # for transparent colour of the 'A' signal (and, later, its inferred value)
 if (!interactive()) {
-    png("complex_demodulation_01-%d.png", type = "cairo", unit = "in", width = 7, height = 5, res = 300)
+    png("comp_demod_01_lowpass.png", type = "cairo", unit = "in", width = 7, height = 5, res = 300)
     #png("complex_demodulation_01-%d.png", unit = "in", width = 7, height = 5, res = 300)
 }
 for (dt in c(1, 10) / 60) { # two sampling intervals (in hours)
